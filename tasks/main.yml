@@ -1,0 +1,57 @@
+---
+- name: "APT: install FreeIPA Client"
+  ansible.builtin.apt:
+    pkg:
+      - freeipa-client
+      - sssd-idp
+      - sssd-kcm
+      - sssd-tools
+      - krb5-pkinit
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: "DNF: install FreeIPA Client"
+  ansible.builtin.dnf:
+    name:
+      - freeipa-client
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: "Fix up paths in sssd idp support"
+  ansible.builtin.replace:
+    path: /etc/krb5.conf.d/sssd_enable_idp
+    regexp: "/lib64/"
+    replace: "/lib/x86_64-linux-gnu/"
+  when: ansible_os_family == 'Debian'
+
+- name: "See if freeipa is enrolled"
+  stat:
+    path: "/etc/ipa/default.conf"
+  register: ipa_enrolled
+
+- name: "Enroll client"
+  shell: ipa-client-install --force-join --mkhomedir --ssh-trust-dns --unattended --server="{{ freeipa_client_server }}" --domain="{{ inventory_hostname[1:] }}" --principal="{{ freeipa_client_enroll_user}}" --password="{{ freeipa_client_enroll_pass }}"
+  when: not ipa_enrolled.stat.exists
+
+- name: "Comment out lines that should no longer be used for auth"
+  ansible.builtin.replace:
+    path: /etc/pam.d/common-auth
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.val }}"
+  with_items:
+    - { regexp: "^(auth.*\[.*\].*pam_unix.so nullok)",        val: "#\1" }
+    - { regexp: "^(auth.*\[.*\].*pam_sss.so use_first_pass)", val: "#\1" }
+  when: ansible_os_family == 'Debian'
+
+- name: "Fix common-auth to work with IDP"
+  ansible.builtin.blockinfile:
+    path: /etc/pam.d/common-auth
+    insertbefore: '^#*auth.*\[.*\].*pam_unix.so nullok'
+    block: |
+      auth  [default=1 ignore=ignore success=ok]  pam_usertype.so isregular
+      auth  [default=1 ignore=ignore success=ok]  pam_localuser.so
+      auth  sufficient          pam_unix.so nullok
+      auth  [default=1 ignore=ignore success=ok]  pam_usertype.so isregular
+      auth  sufficient          pam_sss.so forward_pass
+    marker: "# {mark} ANSIBLE MANAGED BLOCK -- SSSD IDP SUPPORT"
+  when: ansible_os_family == 'Debian'
