@@ -16,10 +16,9 @@ This role is used to join a host to a pre-existing FreeIPA domain.
 In most environments these settings will likely be global and stored under the
 group `all` vars.
 
-* `freeipa_client_enroll_user`: Username to use to enroll the system into the
+* `auth_freeipa_enroll_user`: Username to use to enroll the system into the
   FreeIPA realm.
-* `freeipa_client_enroll_pass`: Password for the enrollment user in order to
+* `auth_freeipa_enroll_pass`: Password for the enrollment user in order to
   enroll the host.  Should be stored in the ansible vault.
-* `freeipa_client_server`: The freeipa server to use for enrollment.
-* `freeipa_client_realm`: The freeipa realm to use for enrollment.
+* `auth_freeipa_server`: The freeipa server to use for enrollment.
 

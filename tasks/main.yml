@@ -30,7 +30,7 @@
   register: ipa_enrolled
 
 - name: "Enroll client"
-  shell: ipa-client-install --force-join --mkhomedir --ssh-trust-dns --unattended --server="{{ freeipa_client_server }}" --domain="{{ inventory_hostname[1:] }}" --principal="{{ freeipa_client_enroll_user}}" --password="{{ freeipa_client_enroll_pass }}"
+  shell: ipa-client-install --force-join --mkhomedir --ssh-trust-dns --unattended --server="{{ auth_freeipa_server }}" --domain="{{ inventory_hostname[1:] }}" --principal="{{ auth_freeipa_enroll_user }}" --password="{{ auth_freeipa_enroll_pass }}"
   when: not ipa_enrolled.stat.exists
 
 - name: "Comment out lines that should no longer be used for auth"
