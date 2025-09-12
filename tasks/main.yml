@@ -30,7 +30,7 @@
   register: ipa_enrolled
 
 - name: "Enroll client"
-  shell: ipa-client-install --force-join --mkhomedir --ssh-trust-dns --unattended --server="{{ auth_freeipa_server }}" --domain="{{ inventory_hostname[1:] }}" --principal="{{ auth_freeipa_enroll_user }}" --password="{{ auth_freeipa_enroll_pass }}"
+  shell: ipa-client-install --force-join --mkhomedir --ssh-trust-dns --unattended --server="{{ auth_freeipa_server }}" --domain="{{ (inventory_hostname | split("."))[1:] | join(".") }}" --principal="{{ auth_freeipa_enroll_user }}" --password="{{ auth_freeipa_enroll_pass }}"
   when: not ipa_enrolled.stat.exists
 
 - name: "Fix common-auth to work with IDP"
