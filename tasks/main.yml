@@ -31,7 +31,7 @@
 
 - name: "Set Domain"
   set_fact:
-    domain: "{{ (inventory_hostname | split('.''))[1:] | join('.'') }}"
+    domain: "{{ (inventory_hostname | split('.'))[1:] | join('.') }}"
 
 - name: "Enroll client"
   shell: ipa-client-install --force-join --mkhomedir --ssh-trust-dns --unattended --server="{{ auth_freeipa_server }}" --domain="{{ domain }}" --principal="{{ auth_freeipa_enroll_user }}" --password="{{ auth_freeipa_enroll_pass }}"
