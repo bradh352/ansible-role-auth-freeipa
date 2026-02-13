@@ -25,22 +25,23 @@
   when: ansible_os_family == 'Debian'
 
 - name: "See if freeipa is enrolled"
-  stat:
+  ansible.builtin.stat:
     path: "/etc/ipa/default.conf"
   register: ipa_enrolled
 
 - name: "Set Domain"
-  set_fact:
+  ansible.builtin.set_fact:
     domain: "{{ (inventory_hostname | split('.'))[1:] | join('.') }}"
 
 - name: "Enroll client"
-  shell: ipa-client-install --force-join --mkhomedir --ssh-trust-dns --unattended --server="{{ auth_freeipa_server }}" --domain="{{ domain }}" --principal="{{ auth_freeipa_enroll_user }}" --password="{{ auth_freeipa_enroll_pass }}"
+  ansible.builtin.command: ipa-client-install --force-join --mkhomedir --ssh-trust-dns --unattended --server="{{ auth_freeipa_server }}" --domain="{{ domain }}"
+    --principal="{{ auth_freeipa_enroll_user }}" --password="{{ auth_freeipa_enroll_pass }}"
   when: not ipa_enrolled.stat.exists
 
 - name: "Fix common-auth to work with IDP"
   ansible.builtin.blockinfile:
     path: /etc/pam.d/common-auth
-    insertbefore: '^#*auth.*\[.*\].*pam_unix.so nullok'
+    insertbefore: "^#*auth.*\\[.*\\].*pam_unix.so nullok"
     block: |
       auth  [default=1 ignore=ignore success=ok]  pam_usertype.so isregular
       auth  [default=1 ignore=ignore success=ok]  pam_localuser.so
@@ -56,8 +57,8 @@
     regexp: "{{ item.regexp }}"
     replace: "{{ item.val }}"
   with_items:
-    - { "regexp": '^(auth.*\[.*\].*pam_unix.so nullok)',        "val": '#\1' }
-    - { "regexp": '^(auth.*\[.*\].*pam_sss.so use_first_pass)', "val": '#\1' }
+    - { "regexp": "^(auth.*\\[.*\\].*pam_unix.so nullok)", "val": "#\\1" }
+    - { "regexp": "^(auth.*\\[.*\\].*pam_sss.so use_first_pass)", "val": "#\\1" }
   when: ansible_os_family == 'Debian'
 
 - name: "Make sure sssd enumerate is enabled and sudo can use kerberos"
@@ -67,12 +68,12 @@
     option: "{{ item.key }}"
     value: "{{ item.value }}"
   with_items:
-    - { "key": "enumerate",           "value": "True" }
+    - { "key": "enumerate", "value": "True" }
     - { "key": "pam_gssapi_services", "value": "sudo, sudo-i" }
   notify: restart_sssd
 
 - name: "sudo allow gssapi auth"
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "/etc/pam.d/{{ item }}"
     line: "auth sufficient pam_sss_gss.so"
     insertbefore: "{{ '^auth.*system-auth.*' if ansible_os_family == 'RedHat' else '@include common-auth' }}"
