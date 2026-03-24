@@ -8,21 +8,21 @@
       - sssd-tools
       - krb5-pkinit
     state: present
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: "DNF: install FreeIPA Client"
   ansible.builtin.dnf:
     name:
       - freeipa-client
     state: present
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
 
 - name: "Fix up paths in sssd idp support"
   ansible.builtin.replace:
     path: /etc/krb5.conf.d/sssd_enable_idp
     regexp: "/lib64/"
     replace: "/lib/x86_64-linux-gnu/"
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: "See if freeipa is enrolled"
   ansible.builtin.stat:
@@ -45,11 +45,11 @@
     owner: root
     mode: 0644
   register: pam_auth_update
-  when: ansible_os_family == 'Debian'
+  when: ansible_facts['os_family'] == 'Debian'
 
 - name: "Debian: Configure PAM"
   ansible.builtin.command: "pam-auth-update --disable sss sss-smart-card-optional sss-smart-card-required --enable ipa mkhomedir --force"
-  when: ansible_os_family == 'Debian' and pam_auth_update.changed
+  when: ansible_facts['os_family'] == 'Debian' and pam_auth_update.changed
 
 - name: "Make sure sssd enumerate is enabled and sudo can use kerberos"
   community.general.ini_file:
@@ -70,4 +70,4 @@
   with_items:
     - "sudo"
     - "sudo-i"
-  when: ansible_os_family == 'RedHat'
+  when: ansible_facts['os_family'] == 'RedHat'
