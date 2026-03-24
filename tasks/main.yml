@@ -43,7 +43,7 @@
     src: pam-auth-update-ipa
     dest: /usr/share/pam-configs/ipa
     owner: root
-    mode: 0644
+    mode: "0644"
   register: pam_auth_update
   when: ansible_facts['os_family'] == 'Debian'
 
