@@ -39,7 +39,7 @@
   when: not ipa_enrolled.stat.exists
 
 - name: "Debian: Install IPA pam-auth-update module"
-  copy:
+  ansible.builtin.copy:
     src: pam-auth-update-ipa
     dest: /usr/share/pam-configs/ipa
     owner: root
@@ -63,7 +63,7 @@
   notify: restart_sssd
 
 - name: "Redhat: sudo allow gssapi auth"
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "/etc/pam.d/{{ item }}"
     line: "auth sufficient pam_sss_gss.so"
     insertbefore: "^auth.*system-auth.*"
